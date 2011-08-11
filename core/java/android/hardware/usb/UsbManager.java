@@ -186,6 +186,24 @@ public class UsbManager {
         }
     }
 
+    public boolean isHostModeEnabled() {
+        try {
+            return mService.isHostModeEnabled();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException in isHostModeEnabled", e);
+            return false;
+        }
+    }
+
+    public boolean setHostMode(boolean value) {
+        try {
+            return mService.setHostMode(value);
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException in setHostMode", e);
+            return false;
+        }
+    }
+
     /**
      * Opens a file descriptor for reading and writing data to the USB accessory.
      *

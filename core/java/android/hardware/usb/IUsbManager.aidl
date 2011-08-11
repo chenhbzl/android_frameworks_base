@@ -24,6 +24,12 @@ import android.os.ParcelFileDescriptor;
 /** @hide */
 interface IUsbManager
 {
+    /* returns true if usb host mode was setted */
+    boolean setHostMode(boolean value);
+
+    /* return true if usb is in host mode */
+    boolean isHostModeEnabled();
+
     /* Returns the currently attached USB accessory */
     UsbAccessory getCurrentAccessory();
 

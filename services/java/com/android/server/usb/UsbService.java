@@ -70,6 +70,15 @@ public class UsbService extends IUsbManager.Stub {
             "/sys/class/switch/usb_configuration/state";
     private static final String USB_COMPOSITE_CLASS_PATH =
             "/sys/class/usb_composite";
+    
+    /* galaxys dev path for usb-host swicth */
+    private static final String USB_FSA9480_DEV_PATH =
+        "/dev/fsa9480";
+    private static final String USB_MODE_OTGD =
+        "usb-otgd\n";
+    private static final String USB_MODE_HOST =
+        "usb-host\n";
+    private static final int USB_MODE_LENGTH = 9;
 
     private static final int MSG_UPDATE_STATE = 0;
     private static final int MSG_FUNCTION_ENABLED = 1;
@@ -314,6 +323,34 @@ public class UsbService extends IUsbManager.Stub {
     private final void update(boolean delayed) {
         mHandler.removeMessages(MSG_UPDATE_STATE);
         mHandler.sendEmptyMessageDelayed(MSG_UPDATE_STATE, delayed ? UPDATE_DELAY : 0);
+    }
+    
+    public boolean setHostMode(boolean value) {
+    	byte[] buffer = value ? USB_MODE_HOST.getBytes() : USB_MODE_OTGD.getBytes();
+    	try {
+    	    FileWriter file = new FileWriter(USB_FSA9480_DEV_PATH);
+    	    int len = file.write(buffer, 0, buffer.length);
+    	    return value ? isHostModeEnabled() : !isHostModeEnabled();
+    	} catch (FileNotFoundException e) {
+    	    Slog.i(TAG, "This kernel does not have USB host switch support");
+    	} catch (Exception e) {
+    	    Slog.e(TAG, "" , e);
+    	}
+    	return false;
+    }
+    
+    public boolean isHostModeEnabled() {
+    	byte[] buffer = new byte[USB_MODE_LENGTH]
+    	try {
+            FileReader file = new FileReader(USB_FSA9480_DEV_PATH);
+            int len = file.read(buffer, 0, buffer.length);
+            return buffer.equals(USB_MODE_HOST);
+        } catch (FileNotFoundException e) {
+            Slog.i(TAG, "This kernel does not have USB host switch support");
+        } catch (Exception e) {
+            Slog.e(TAG, "" , e);
+        }
+        return false;
     }
 
     /* returns the currently attached USB accessory (device mode) */
