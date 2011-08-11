@@ -42,7 +42,10 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -326,28 +329,30 @@ public class UsbService extends IUsbManager.Stub {
     }
     
     public boolean setHostMode(boolean value) {
-    	byte[] buffer = value ? USB_MODE_HOST.getBytes() : USB_MODE_OTGD.getBytes();
     	try {
-    	    FileWriter file = new FileWriter(USB_FSA9480_DEV_PATH);
-    	    int len = file.write(buffer, 0, buffer.length);
+    	    FileOutputStream fos = new FileOutputStream(USB_FSA9480_DEV_PATH);
+    	    fos.write(value ? USB_MODE_HOST.getBytes() : USB_MODE_OTGD.getBytes());
+            fos.close();
     	    return value ? isHostModeEnabled() : !isHostModeEnabled();
     	} catch (FileNotFoundException e) {
     	    Slog.i(TAG, "This kernel does not have USB host switch support");
-    	} catch (Exception e) {
+    	} catch (IOException e) {
     	    Slog.e(TAG, "" , e);
     	}
     	return false;
     }
     
     public boolean isHostModeEnabled() {
-    	byte[] buffer = new byte[USB_MODE_LENGTH]
+        byte[] buffer = new byte[USB_MODE_LENGTH];
     	try {
-            FileReader file = new FileReader(USB_FSA9480_DEV_PATH);
-            int len = file.read(buffer, 0, buffer.length);
-            return buffer.equals(USB_MODE_HOST);
+            FileInputStream fis = new FileInputStream(USB_FSA9480_DEV_PATH);
+            int len = fis.read(buffer, 0, buffer.length);
+            fis.close();
+            String state = new String(buffer);
+            return state.equals(USB_MODE_HOST);
         } catch (FileNotFoundException e) {
             Slog.i(TAG, "This kernel does not have USB host switch support");
-        } catch (Exception e) {
+        } catch (IOException e) {
             Slog.e(TAG, "" , e);
         }
         return false;
